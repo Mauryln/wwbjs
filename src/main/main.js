@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const config = require('./config');
+const config = require('../config/config');
 
 let mainWindow;
 let whatsappClient;
@@ -10,7 +10,7 @@ let whatsappClient;
 function createWindow() {
   mainWindow = new BrowserWindow(config.window);
 
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   
   // Mostrar la ventana cuando esté lista
   mainWindow.once('ready-to-show', () => {

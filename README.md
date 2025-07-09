@@ -58,10 +58,20 @@ Una aplicación de escritorio construida con Electron que permite conectarse a W
 
 ```
 B/
-├── main.js          # Proceso principal de Electron
-├── index.html       # Interfaz de usuario
-├── package.json     # Configuración del proyecto
-└── README.md        # Este archivo
+├── src/                    # Código fuente principal
+│   ├── main/              # Proceso principal de Electron
+│   │   ├── main.js        # Archivo principal de Electron
+│   │   └── start.js       # Script de inicio mejorado
+│   ├── renderer/           # Interfaz de usuario
+│   │   └── index.html     # Página principal de la aplicación
+│   ├── config/            # Configuración centralizada
+│   │   └── config.js      # Configuración de la aplicación
+│   └── assets/            # Recursos estáticos
+│       └── (íconos, imágenes, etc.)
+├── package.json           # Configuración del proyecto
+├── README.md              # Documentación principal
+├── .gitignore            # Archivos a ignorar
+└── STRUCTURE.md          # Documentación de estructura
 ```
 
 ## 🛠️ Tecnologías Utilizadas

@@ -16,7 +16,7 @@ console.log('⏳ Iniciando aplicación...\n');
 const child = spawn(command, [], {
   stdio: 'inherit',
   shell: true,
-  cwd: __dirname
+  cwd: path.join(__dirname, '../../')
 });
 
 // Manejar eventos del proceso hijo
