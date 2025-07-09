@@ -1,0 +1,23 @@
+{
+  "name": "whatsapp-electron-app",
+  "version": "1.0.0",
+  "description": "WhatsApp Electron app with QR code authentication",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "launch": "node src/main/start.js",
+    "launch:dev": "node src/main/start.js --dev"
+  },
+  "keywords": ["electron", "whatsapp", "qr"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^28.0.0",
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.9.1"
+  }
+} 

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Electron App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            color: white;
+        }
+
+        h1 {
+            color: #25D366;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .qr-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px dashed #25D366;
+        }
+
+        .qr-code {
+            max-width: 250px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #25D366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-screen {
+            display: none;
+        }
+
+        .welcome-screen.show {
+            display: block;
+        }
+
+        .qr-screen {
+            display: block;
+        }
+
+        .qr-screen.hide {
+            display: none;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #25D366;
+        }
+
+        .feature h3 {
+            color: #25D366;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- QR Code Screen -->
+        <div id="qrScreen" class="qr-screen">
+            <div class="logo">📱</div>
+            <h1>Conecta tu WhatsApp</h1>
+            <p class="subtitle">Escanea el código QR con tu aplicación de WhatsApp</p>
+            
+            <div class="qr-container">
+                <div id="loading" class="loading"></div>
+                <img id="qrCode" class="qr-code" style="display: none;" alt="QR Code">
+            </div>
+            
+            <div id="status" class="status connecting">
+                Conectando con WhatsApp...
+            </div>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="welcome-screen">
+            <div class="logo">✅</div>
+            <h1>¡Bienvenido!</h1>
+            <p class="subtitle">Tu WhatsApp está conectado exitosamente</p>
+            
+            <div class="status connected">
+                WhatsApp conectado y listo para usar
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>📨 Enviar Mensajes</h3>
+                    <p>Envía mensajes a cualquier contacto</p>
+                </div>
+                <div class="feature">
+                    <h3>📱 Gestión de Chats</h3>
+                    <p>Gestiona tus conversaciones</p>
+                </div>
+                <div class="feature">
+                    <h3>🔔 Notificaciones</h3>
+                    <p>Recibe notificaciones en tiempo real</p>
+                </div>
+            </div>
+
+            <button class="btn" onclick="disconnect()">Desconectar</button>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        // Elementos del DOM
+        const qrScreen = document.getElementById('qrScreen');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const qrCode = document.getElementById('qrCode');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+
+        // Escuchar eventos del proceso principal
+        ipcRenderer.on('qr-code', (event, qrDataURL) => {
+            qrCode.src = qrDataURL;
+            qrCode.style.display = 'block';
+            loading.style.display = 'none';
+            status.textContent = 'Escanea el código QR con tu WhatsApp';
+            status.className = 'status connecting';
+        });
+
+        ipcRenderer.on('whatsapp-ready', () => {
+            qrScreen.classList.add('hide');
+            welcomeScreen.classList.add('show');
+            status.textContent = 'WhatsApp conectado exitosamente';
+            status.className = 'status connected';
+        });
+
+        ipcRenderer.on('auth-failure', (event, message) => {
+            status.textContent = 'Error de autenticación: ' + message;
+            status.className = 'status error';
+        });
+
+        ipcRenderer.on('disconnected', (event, reason) => {
+            qrScreen.classList.remove('hide');
+            welcomeScreen.classList.remove('show');
+            qrCode.style.display = 'none';
+            loading.style.display = 'inline-block';
+            status.textContent = 'Desconectado: ' + reason;
+            status.className = 'status error';
+        });
+
+        // Función para desconectar
+        async function disconnect() {
+            try {
+                const result = await ipcRenderer.invoke('disconnect-whatsapp');
+                if (result.success) {
+                    qrScreen.classList.remove('hide');
+                    welcomeScreen.classList.remove('show');
+                    qrCode.style.display = 'none';
+                    loading.style.display = 'inline-block';
+                    status.textContent = 'Desconectado. Reconectando...';
+                    status.className = 'status connecting';
+                } else {
+                    console.error('Error al desconectar:', result.error);
+                }
+            } catch (error) {
+                console.error('Error al desconectar:', error);
+            }
+        }
+
+        // Verificar estado inicial
+        async function checkInitialState() {
+            try {
+                const clientInfo = await ipcRenderer.invoke('get-client-info');
+                if (clientInfo.isReady) {
+                    qrScreen.classList.add('hide');
+                    welcomeScreen.classList.add('show');
+                    status.textContent = 'WhatsApp ya está conectado';
+                    status.className = 'status connected';
+                }
+            } catch (error) {
+                console.error('Error checking initial state:', error);
+            }
+        }
+
+        // Verificar estado al cargar
+        checkInitialState();
+    </script>
+</body>
+</html> 
